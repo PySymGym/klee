@@ -255,6 +255,7 @@ static void run_monitored(__attribute__((unused)) char *executable,
 #ifdef HAVE_SYS_CAPABILITY_H
 /* ensure this process has CAP_SYS_CHROOT capability. */
 void ensure_capsyschroot(const char *executable) {
+  (void)executable;
   cap_t caps = cap_get_proc(); // all current capabilities.
   cap_flag_value_t chroot_permitted, chroot_effective;
 

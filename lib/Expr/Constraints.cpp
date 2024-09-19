@@ -20,6 +20,7 @@
 #include "klee/Expr/SourceBuilder.h"
 #include "klee/Expr/SymbolicSource.h"
 #include "klee/Expr/Symcrete.h"
+#include "klee/Module/KInstruction.h"
 #include "klee/Module/KModule.h"
 #include "klee/Support/CompilerWarning.h"
 #include "klee/Support/OptionCategories.h"
@@ -388,12 +389,33 @@ const ExprHashMap<ExprHashSet> &PathConstraints::simplificationMap() const {
 
 const ConstraintSet &PathConstraints::cs() const { return constraints; }
 
+const ConstraintSet &
+PathConstraints::withAssumtions(const ExprHashSet &assumptions) const {
+  if (assumptions.size() == 0) {
+    return cs();
+  }
+  tmpConstraints = constraints;
+  for (auto assump : assumptions) {
+    tmpConstraints.addConstraint(assump);
+  }
+  return tmpConstraints;
+}
+
+
 const PathConstraints::ordered_constraints_ty &
 PathConstraints::orderedCS() const {
   return orderedConstraints;
 }
 
-void PathConstraints::advancePath(KInstruction *ki) { _path.advance(ki); }
+void PathConstraints::advancePath(KInstruction *prevPC, KInstruction *pc) {
+  _path.stepInstruction(prevPC, pc);
+}
+
+void PathConstraints::retractPath() { _path.retractInstruction(); }
+
+void PathConstraints::advancePath(const Path &path) {
+  _path = Path::concat(_path, path);
+}
 
 ExprHashSet PathConstraints::addConstraint(ref<Expr> e,
                                            Path::PathIndex currIndex) {

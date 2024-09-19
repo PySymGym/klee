@@ -15,6 +15,7 @@
 
 #include "llvm/Support/raw_ostream.h"
 
+#include <klee/Module/KInstIterator.h>
 #include <unordered_map>
 #include <vector>
 
@@ -27,6 +28,7 @@ class Executor;
 class KModule;
 struct KBlock;
 struct KFunction;
+struct CodeLocation;
 
 static const unsigned MAGIC_HASH_CONSTANT = 39;
 
@@ -125,10 +127,52 @@ public:
 
   [[nodiscard]] unsigned hash() const override { return getID().hash(); }
 
+  [[nodiscard]] inline KInstIterator getIterator() const {
+    return (parent->instructions + getIndex());
+  }
+
   static bool classof(const KValue *rhs) {
     return rhs->getKind() == Kind::INSTRUCTION;
   }
 };
+
+
+struct CallStackFrame {
+  KInstruction *caller;
+  KFunction *kf;
+
+  // /// @brief Location of a return statement in current stack frame.
+  // /// @details Serves for a very special case when actual location
+  // /// of `return` statement in source code can not be deduced from
+  // /// LLVM IR `dbg!` metadata.
+  // std::optional<ref<CodeLocation>> returnLocation;
+
+  CallStackFrame(KInstruction *caller_, KFunction *kf_)
+      : caller(caller_), kf(kf_) {}
+  ~CallStackFrame() = default;
+
+  bool equals(const CallStackFrame &other) const;
+
+  bool operator==(const CallStackFrame &other) const { return equals(other); }
+
+  bool operator!=(const CallStackFrame &other) const { return !equals(other); }
+
+  static void subtractFrames(std::vector<CallStackFrame> &minued,
+                             std::vector<CallStackFrame> subtrahend) {
+    while (!subtrahend.empty() && !minued.empty()) {
+      if (subtrahend.size() == 1) {
+        assert(subtrahend.back().caller == nullptr);
+        break;
+      }
+      auto forwardF = subtrahend.back();
+      auto backwardF = minued.back();
+      assert(forwardF == backwardF);
+      minued.pop_back();
+      subtrahend.pop_back();
+    }
+  }
+};
+
 
 struct KGEPInstruction : KInstruction {
   /// indices - The list of variable sized adjustments to add to the pointer

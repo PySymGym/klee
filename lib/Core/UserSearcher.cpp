@@ -9,6 +9,7 @@
 
 #include "UserSearcher.h"
 
+#include "BackwardSearcher.h"
 #include "Executor.h"
 #include "Searcher.h"
 
@@ -86,6 +87,12 @@ cl::opt<bool> UseFairSearch(
         "Use fair searcher to interleave states with different entry points"
         "(default=false)"),
     cl::init(false), cl::cat(SearchCat));
+
+cl::opt<unsigned long long>
+    MaxPropagations("max-propagations",
+                    cl::desc("propagate at most this amount of propagations "
+                             "with the same state (default=0 (no limit))."),
+                    cl::init(0), cl::cat(TerminationCat));
 
 } // namespace klee
 
@@ -207,4 +214,9 @@ Searcher *klee::constructUserSearcher(Executor &executor) {
   os << "END searcher description\n";
 
   return searcher;
+}
+
+BackwardSearcher *klee::constructUserBackwardSearcher(Executor &executor) {
+  (void)executor;
+  return new RecencyRankedSearcher(MaxPropagations - 1);
 }

@@ -70,6 +70,7 @@ public:
   const FunctionDistanceMap &getBackwardDistance(KFunction *kf);
 
   void getNearestPredicateSatisfying(KBlock *from, KBlockPredicate predicate,
+                                     bool forward,
                                      KBlockSet &result);
 
   const KBlockMap<std::set<unsigned>> &getFunctionBranches(KFunction *kf);
@@ -77,6 +78,13 @@ public:
   const KBlockMap<std::set<unsigned>> &
   getFunctionConditionalBranches(KFunction *kf);
   const KBlockMap<std::set<unsigned>> &getFunctionBlocks(KFunction *kf);
+
+  std::set<KBlock *, KBlockCompare>
+  getNearestPredicateSatisfying(KBlock *from, KBlockPredicate predicate,
+                                bool forward);
+
+  std::vector<std::pair<KBlock *, KBlock *>>
+  dismantleFunction(KFunction *kf, KBlockPredicate predicate);
 };
 
 } // namespace klee

@@ -55,6 +55,7 @@ public:
 
   virtual void incPathsCompleted() = 0;
   virtual void incPathsExplored(std::uint32_t num = 1) = 0;
+  virtual void incSummarizedLocations() = 0;
 
   virtual void processTestCase(const ExecutionState &state, const char *message,
                                const char *suffix, bool isError = false) = 0;
@@ -84,6 +85,9 @@ enum class MockMutableGlobalsPolicy {
   None, // No mock for globals
   All,  // Mock globals on module build stage and generate bc module for it
 };
+
+
+enum class ExecutionKind { Forward, Bidirectional };
 
 class Interpreter {
 public:

@@ -157,17 +157,19 @@ void TargetedSearcher::update(
   // insert states
   for (const auto state : addedStates) {
     states->insert(state, getWeight(state));
+    stateshere.insert(state);
   }
 
   // remove states
   for (const auto state : removedStates) {
     states->remove(state);
+    stateshere.erase(state);
   }
 }
 
 weight_type TargetedSearcher::getWeight(ExecutionState *es) {
-  KBlock *kb = es->pc->parent;
-  KInstruction *ki = es->pc;
+  KBlock *kb = es->getPCBlock();
+  KInstruction *ki = es->getPC();
   weight_type weight;
   if (!target->shouldFailOnThisTarget() && kb->getNumInstructions() &&
       !isa<KCallBlock>(kb) && kb->getFirstInstruction() != ki &&
@@ -383,7 +385,7 @@ double WeightedRandomSearcher::getWeight(ExecutionState *es) {
     return std::pow(0.5, es->depth);
   case InstCount: {
     uint64_t count = theStatisticManager->getIndexedValue(
-        stats::instructions, es->pc->getGlobalIndex());
+        stats::instructions, es->getPC()->getGlobalIndex());
     double inv = 1. / std::max((uint64_t)1, count);
     return inv * inv;
   }
@@ -400,7 +402,7 @@ double WeightedRandomSearcher::getWeight(ExecutionState *es) {
   case CoveringNew:
   case MinDistToUncovered: {
     uint64_t md2u = computeMinDistToUncovered(
-        es->pc, es->stack.infoStack().back().minDistToUncoveredOnReturn);
+        es->getPC(), es->stack.infoStack().back().minDistToUncoveredOnReturn);
 
     double invMD2U = 1. / (md2u ? md2u : 10000);
     if (type == CoveringNew) {

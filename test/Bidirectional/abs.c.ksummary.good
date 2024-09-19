@@ -1,0 +1,21 @@
+(lemma
+  path: (0 (abs: %entry %if.end) 3) @ 0 at %return in function abs (load)
+
+  (instruction2 : (array (w64 8) (instruction 0 %entry abs 0))
+   lazyInitializationAddress1 : (array (w64 8) (lazyInitializationAddress N0:(ReadLSB w64 0 instruction2)))
+   lazyInitializationContent1 : (array (w64 4) (lazyInitializationContent N1:(ReadLSB w64 0 lazyInitializationAddress1))))
+
+  ((Not (Slt N2:(ReadLSB w32 0 lazyInitializationContent1)
+             0))
+   (Eq 2147483648 N2)))
+
+(lemma
+  path: (0 (abs: %entry %if.then) 2) @ 0 at %return in function abs (load)
+
+  (instruction2 : (array (w64 8) (instruction 0 %entry abs 0))
+   lazyInitializationAddress1 : (array (w64 8) (lazyInitializationAddress N0:(ReadLSB w64 0 instruction2)))
+   lazyInitializationContent1 : (array (w64 4) (lazyInitializationContent N1:(ReadLSB w64 0 lazyInitializationAddress1))))
+
+  ((Not (Slt (ReadLSB w32 0 lazyInitializationContent1)
+             0))))
+

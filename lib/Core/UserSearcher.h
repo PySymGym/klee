@@ -11,6 +11,7 @@
 #define KLEE_USERSEARCHER_H
 
 namespace klee {
+class BackwardSearcher;
 class Executor;
 class Searcher;
 
@@ -21,6 +22,9 @@ void initializeSearchOptions();
 
 Searcher *constructBaseSearcher(Executor &executor);
 Searcher *constructUserSearcher(Executor &executor);
+
+BackwardSearcher *constructUserBackwardSearcher(Executor &executor);
+
 struct BaseSearcherConstructor {
   Executor &executor;
   BaseSearcherConstructor(Executor &executor) : executor(executor) {}
