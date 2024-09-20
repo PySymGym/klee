@@ -7,6 +7,7 @@
 DISABLE_WARNING_PUSH
 DISABLE_WARNING_DEPRECATED_DECLARATIONS
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/Casting.h"
 DISABLE_WARNING_POP
 
 using namespace klee;
@@ -116,7 +117,7 @@ std::vector<CallStackFrame> Path::getStack(bool reversed) const {
   std::vector<CallStackFrame> stack;
   for (unsigned i = 0; i < path.size(); i++) {
     auto index = reversed ? path.size() - 1 - i : i;
-    auto current = path.at(index);
+    auto current = path[index];
 
     if (i == 0) {
       stack.push_back(CallStackFrame(nullptr, current.block->parent));
@@ -184,6 +185,8 @@ Path Path::concat(const Path &l, const Path &r) {
   }
   Path path;
   auto leftWhole = l.blockCompleted(l.path.size() - 1);
+  path.path.reserve(leftWhole ? l.path.size() + r.path.size()
+                              : l.path.size() + r.path.size() - 1);
   for (unsigned i = 0; i < l.path.size(); i++) {
     path.path.push_back(l.path.at(i));
   }
@@ -264,10 +267,6 @@ void Path::print(llvm::raw_ostream &ss) const {
     ss << " " << last;
   }
   ss << ") @ " << (next ? next->toString() : "None");
-}
-
-unsigned Path::KBlockSize() const {
-  return path.size();
 }
 
 std::pair<bool, KCallBlock *> Path::fromOutTransition() const {

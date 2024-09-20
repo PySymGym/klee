@@ -7,17 +7,16 @@ DISABLE_WARNING_DEPRECATED_DECLARATIONS
 #include "llvm/Support/raw_ostream.h"
 DISABLE_WARNING_POP
 
-#include "klee/ADT/ImmutableList.h"
-
+#include <stack>
 #include <string>
 #include <vector>
 
 namespace klee {
 struct CallStackFrame;
 struct KBlock;
+struct KCallBlock;
 struct KFunction;
 struct KInstruction;
-struct KCallBlock;
 class KModule;
 
 class Path {
@@ -32,10 +31,6 @@ public:
       return block == other.block && kind == other.kind;
     }
 
-    bool operator!=(const entry &other) const {
-      return !(*this == other);
-    }
-
     bool operator<(const entry &other) const {
       return block < other.block || (block == other.block && kind < other.kind);
     }
@@ -44,13 +39,19 @@ public:
     std::vector<entry> getSuccessors();
   };
 
-  using path_ty = ImmutableList<entry>;
+  using path_ty = std::vector<entry>;
 
   struct PathIndex {
     unsigned long block;
     unsigned long instruction;
-    bool operator==(const PathIndex &rhs) const {
-      return block == rhs.block && instruction == rhs.instruction;
+
+    bool operator==(const PathIndex &other) const {
+      return block == other.block && instruction == other.instruction;
+    }
+
+    bool operator<(const PathIndex &other) const {
+      return block < other.block ||
+             (block == other.block && instruction < other.instruction);
     }
   };
 
@@ -87,18 +88,18 @@ public:
                (lhs.last == rhs.last && lhs.next < rhs.next)))));
   }
 
-  unsigned KBlockSize() const;
   bool empty() const { return path.empty(); }
   bool emptyWithNext() const { return path.empty() && next; }
 
   std::pair<bool, KCallBlock *> fromOutTransition() const;
 
+  unsigned KBlockSize() const { return path.size(); }
   const path_ty &getBlocks() const;
   unsigned getFirstIndex() const;
   KInstruction *getFirstInstruction() const;
+  unsigned getLastIndex() const;
   KInstruction *getLastInstruction() const;
   KInstruction *getNext() const { return next; }
-  unsigned getLastIndex() const;
 
   bool blockCompleted(unsigned index) const;
   KFunction *getCalledFunction(unsigned index) const;
@@ -114,15 +115,15 @@ public:
 
   static Path concat(const Path &l, const Path &r);
 
-  // static Path parse(const std::string &str, const KModule &km);
-
+  // For proof obligations
   Path() = default;
 
+  // For execution states
   explicit Path(KInstruction *next) : next(next) {}
 
-  Path(unsigned first, ImmutableList<entry> path, unsigned last,
+  Path(unsigned first, std::vector<entry> path, unsigned last,
        KInstruction *next)
-  : first(first), last(last), path(path), next(next) {}
+      : first(first), last(last), path(path), next(next) {}
 
 private:
   // The path is stored as:

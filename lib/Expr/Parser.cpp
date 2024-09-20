@@ -471,7 +471,7 @@ DeclResult ParserImpl::ParseArrayDecl() {
 Path ParserImpl::ParsePathDecl() {
   unsigned first = 0;
   unsigned last = 0;
-  ImmutableList<Path::entry> blocks;
+  std::vector<Path::entry> blocks;
   KInstruction *next = nullptr;
 
   ConsumeExpectedToken(Token::KWPath);
